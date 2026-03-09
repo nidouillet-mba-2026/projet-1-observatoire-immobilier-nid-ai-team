@@ -1,3 +1,7 @@
 pytest
 pandas
 streamlit
+requests
+beautifulsoup4
+cloudscraper
+playwright
