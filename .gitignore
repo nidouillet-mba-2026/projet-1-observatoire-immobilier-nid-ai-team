@@ -27,3 +27,6 @@ notebook_execution.log
 # Secrets
 .env
 .env.local
+
+# Raw DVF downloads (heavy files)
+donnees/ValeursFoncieres-*.txt

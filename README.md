@@ -49,7 +49,7 @@ streamlit run app/streamlit_app.py
 
 ## Application deployee
 
-**URL :** <!-- REMPLACEZ PAR VOTRE URL DE DEPLOIEMENT -->
+**URL :** https://niddouillet-observatoire.streamlit.app (URL provisoire, a mettre a jour apres deploiement)
 
 ## Repartition du travail
 
