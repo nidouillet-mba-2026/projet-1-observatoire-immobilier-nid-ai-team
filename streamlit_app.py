@@ -4,6 +4,7 @@ import pandas as pd
 import subprocess
 from pathlib import Path
 import os
+import sys
 import re
 import unicodedata
 import requests
@@ -193,10 +194,11 @@ st.markdown("""
     """, unsafe_allow_html=True)
 
 # Chemins des fichiers
-DATA_DIR = Path("projet-1-observatoire-immobilier-nid-ai-team/data")
+BASE_DIR = Path(__file__).resolve().parent
+DATA_DIR = BASE_DIR / "data"
 ANNONCES_CSV = DATA_DIR / "annonces.csv"
 DVF_CSV = DATA_DIR / "dvf_toulon.csv"
-SCRIPT_DIR = Path("projet-1-observatoire-immobilier-nid-ai-team/scripts")
+SCRIPT_DIR = BASE_DIR / "scripts"
 SCRAPE_SCRIPT = SCRIPT_DIR / "run_scrape_multi_sites.py"
 LOGO_PATH = BASE_DIR / "logo_niddouillet.png"
 
@@ -233,7 +235,7 @@ def get_scoring(prix_m2_bien, prix_m2_moyen):
 # ==================== HEADER ====================
 col_logo, col_header = st.columns([0.4, 3])
 with col_logo:
-    st.image("projet-1-observatoire-immobilier-nid-ai-team/logo_niddouillet.png", width=80)
+    st.image(str(LOGO_PATH), width=80)
 with col_header:
     st.markdown("<h1 style='color: #333; margin-bottom: 0px;'>NidDouillet</h1>", unsafe_allow_html=True)
     st.markdown("<p style='color: #999; margin: 0; font-size: 14px;'>Marché immobilier toulonnais</p>", unsafe_allow_html=True)
