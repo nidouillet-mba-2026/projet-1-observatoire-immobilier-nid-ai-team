@@ -3,6 +3,7 @@ import pandas as pd
 import subprocess
 from pathlib import Path
 import os
+import sys
 import requests
 from bs4 import BeautifulSoup
 from playwright.sync_api import sync_playwright
@@ -215,11 +216,13 @@ st.markdown("""
     """, unsafe_allow_html=True)
 
 # Chemins des fichiers
-DATA_DIR = Path("projet-1-observatoire-immobilier-nid-ai-team/data")
+BASE_DIR = Path(__file__).resolve().parent
+DATA_DIR = BASE_DIR / "data"
 ANNONCES_CSV = DATA_DIR / "annonces.csv"
 DVF_CSV = DATA_DIR / "dvf_toulon.csv"
-SCRIPT_DIR = Path("projet-1-observatoire-immobilier-nid-ai-team/scripts")
+SCRIPT_DIR = BASE_DIR / "scripts"
 SCRAPE_SCRIPT = SCRIPT_DIR / "run_scrape_multi_sites.py"
+LOGO_PATH = BASE_DIR / "logo_niddouillet.png"
 
 # Initialisation de la session
 if "data_annonces" not in st.session_state:
@@ -301,7 +304,7 @@ def get_image_url(ad_url):
 # ==================== HEADER ====================
 col_logo, col_header = st.columns([0.4, 3])
 with col_logo:
-    st.image("logo_niddouillet.png", width=80)
+    st.image(str(LOGO_PATH), width=80)
 with col_header:
     st.markdown("<h1 style='color: #333; margin-bottom: 0px;'>NidDouillet</h1>", unsafe_allow_html=True)
     st.markdown("<p style='color: #999; margin: 0; font-size: 14px;'>Marché immobilier toulonnais</p>", unsafe_allow_html=True)
@@ -547,8 +550,8 @@ with tab4:
             st.warning("⏳ Scraping en cours...")
             try:
                 result = subprocess.run(
-                    ["python", str(SCRAPE_SCRIPT)],
-                    cwd=str(SCRIPT_DIR.parent.parent),
+                    [sys.executable, str(SCRAPE_SCRIPT)],
+                    cwd=str(BASE_DIR),
                     capture_output=True,
                     text=True,
                     timeout=600
