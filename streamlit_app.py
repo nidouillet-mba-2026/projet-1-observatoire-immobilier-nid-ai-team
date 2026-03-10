@@ -301,7 +301,7 @@ def get_image_url(ad_url):
 # ==================== HEADER ====================
 col_logo, col_header = st.columns([0.4, 3])
 with col_logo:
-    st.image("projet-1-observatoire-immobilier-nid-ai-team/logo_niddouillet.png", width=80)
+    st.image("logo_niddouillet.png", width=80)
 with col_header:
     st.markdown("<h1 style='color: #333; margin-bottom: 0px;'>NidDouillet</h1>", unsafe_allow_html=True)
     st.markdown("<p style='color: #999; margin: 0; font-size: 14px;'>Marché immobilier toulonnais</p>", unsafe_allow_html=True)
