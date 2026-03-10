@@ -325,13 +325,15 @@ def enrich_annonces_structured(
     extracted_rows = []
     for _, row in df.iterrows():
         full_text = _build_listing_text(row, preferred_text_col=text_col)
-        extracted_rows.append(
-            extract_structured_from_text(
+        try:
+            extracted = extract_structured_from_text(
                 full_text,
                 model=model,
                 llm_available=llm_available,
             )
-        )
+        except TypeError:
+            extracted = extract_structured_from_text(full_text, model=model)
+        extracted_rows.append(extracted)
 
     extracted_df = pd.DataFrame(extracted_rows)
     return pd.concat(
@@ -374,7 +376,17 @@ def summarize_by_quartier(
     if text_col is None:
         text_col = _choose_best_text_column(df)
 
-    df = add_quartier_fallback(df, quartier_col=quartier_col, text_col=text_col, output_col="quartier_source")
+    if quartier_col is None:
+        quartier_col = _detect_quartier_column(df)
+    if quartier_col is None:
+        raise ValueError("Aucune colonne quartier détectée. Passe quartier_col explicitement.")
+
+    df = add_quartier_fallback(
+        df,
+        quartier_col=quartier_col,
+        text_col=text_col,
+        output_col="quartier_source",
+    )
     quartier_group_col = "quartier_source"
 
     llm_available = is_ollama_available()
