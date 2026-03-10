@@ -147,3 +147,5 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
+# ..venv\Scripts\python.exe analysis/prepare_dvf.py

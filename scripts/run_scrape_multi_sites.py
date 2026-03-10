@@ -264,3 +264,5 @@ def build_paged_url(base_url: str, page_num: int) -> str:
 
 if __name__ == "__main__":
     main()
+
+# .venv\Scripts\python.exe scripts/run_scrape_multi_sites.py --url "https://www.seloger.com/classified-search?distributionTypes=Buy&estateTypes=House,Apartment&locations=AD08FR34378&priceMax=500000" --url "https://www.bienici.com/recherche/achat/toulon-83000?prix-max=500000" --budget-max 500000 --limit 220 --per-url-limit 150 --max-pages 5 --scroll-steps 12 --manual-wait 8 --output data/annonces.csv
