@@ -1,11 +1,13 @@
 import streamlit as st
+import streamlit.components.v1 as components
 import pandas as pd
 import subprocess
 from pathlib import Path
 import os
+import re
+import unicodedata
 import requests
 from bs4 import BeautifulSoup
-from playwright.sync_api import sync_playwright
 
 # Configuration de la page
 st.set_page_config(
@@ -37,22 +39,6 @@ st.markdown("""
         border-radius: 12px;
         box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         margin-bottom: 30px;
-    }
-    
-    /* ===== CARTES DE PROPRIÉTÉS ===== */
-    .property-card {
-        background: white;
-        border-radius: 12px;
-        padding: 20px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-        margin-bottom: 20px;
-        border-left: 4px solid #E8A87C;
-        transition: transform 0.2s;
-    }
-    
-    .property-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0,0,0,0.12);
     }
     
     /* ===== SCORING BADGES ===== */
@@ -131,14 +117,6 @@ st.markdown("""
     }
     
     /* ===== FILTRES ===== */
-    .filter-section {
-        background: white;
-        padding: 25px;
-        border-radius: 12px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-        margin-bottom: 30px;
-    }
-    
     .filter-title {
         font-size: 18px;
         font-weight: 700;
@@ -215,10 +193,10 @@ st.markdown("""
     """, unsafe_allow_html=True)
 
 # Chemins des fichiers
-DATA_DIR = Path("projet-1-observatoire-immobilier-nid-ai-team/data")
+DATA_DIR = Path("donnees")
 ANNONCES_CSV = DATA_DIR / "annonces.csv"
 DVF_CSV = DATA_DIR / "dvf_toulon.csv"
-SCRIPT_DIR = Path("projet-1-observatoire-immobilier-nid-ai-team/scripts")
+SCRIPT_DIR = Path("scripts")
 SCRAPE_SCRIPT = SCRIPT_DIR / "run_scrape_multi_sites.py"
 
 # Initialisation de la session
@@ -251,62 +229,95 @@ def get_scoring(prix_m2_bien, prix_m2_moyen):
     else:
         return "Surévalué", "overvalued"
 
-# Fonction pour récupérer l'URL de la première image d'une annonce
-@st.cache_data
-def get_image_url(ad_url):
-    """Récupère l'URL de la première image trouvée sur la page de l'annonce avec Playwright"""
-    if not ad_url or pd.isna(ad_url):
-        return None
-    
-    try:
-        with sync_playwright() as p:
-            # Lancer Chrome
-            browser = p.chromium.launch(headless=True, args=['--disable-gpu', '--no-sandbox'])
-            context = browser.new_context()
-            page = context.new_page()
-            
-            # Aller à la page avec timeout court
-            page.goto(ad_url, wait_until="load", timeout=20000)
-            
-            # Attendre que les images se chargent
-            page.wait_for_load_state("networkidle", timeout=10000)
-            
-            # Chercher les images de propriété
-            img_selectors = [
-                "img[class*='photo']",
-                "img[class*='image']",
-                "img[class*='main']",
-                "img[alt*='propriété']",
-                "img[alt*='bien']",
-                "img",
-            ]
-            
-            for selector in img_selectors:
-                try:
-                    img = page.locator(selector).first
-                    if img.is_visible():
-                        src = img.get_attribute("src")
-                        if src and src.startswith("http"):
-                            browser.close()
-                            return src
-                except:
-                    continue
-            
-            browser.close()
-    except Exception as e:
-        pass
-    
-    return None
-
 # ==================== HEADER ====================
 col_logo, col_header = st.columns([0.4, 3])
 with col_logo:
-    st.image("projet-1-observatoire-immobilier-nid-ai-team/logo_niddouillet.png", width=80)
+    st.image("c:/Users/lapor/OneDrive/Bureau/nid_douillet/logo_niddouillet.png", width=80)
 with col_header:
     st.markdown("<h1 style='color: #333; margin-bottom: 0px;'>NidDouillet</h1>", unsafe_allow_html=True)
     st.markdown("<p style='color: #999; margin: 0; font-size: 14px;'>Marché immobilier toulonnais</p>", unsafe_allow_html=True)
 
 st.markdown("---")
+
+# ==================== FONCTIONS UTILITAIRES ====================
+
+def simplify_title(title):
+    """Simplifie le titre d'une annonce immobilière"""
+    if not title or pd.isna(title):
+        return "Bien immobilier"
+
+    title = str(title).lower()
+
+    # Dictionnaire de correspondances pour simplifier
+    type_mapping = {
+        'appartement': 'Appartement',
+        'maison': 'Maison',
+        'studio': 'Studio',
+        't1': 'Studio',
+        't2': '2 pièces',
+        't3': '3 pièces',
+        't4': '4 pièces',
+        't5': '5 pièces',
+        'duplex': 'Duplex',
+        'triplex': 'Triplex',
+        'loft': 'Loft',
+        'villa': 'Villa',
+        'chalet': 'Chalet'
+    }
+
+    # Chercher le type de bien
+    bien_type = "Bien immobilier"
+    for key, value in type_mapping.items():
+        if key in title:
+            bien_type = value
+            break
+
+    # Chercher le nombre de pièces
+    pieces = ""
+    for i in range(1, 8):
+        if f' {i} ' in title or f'{i}p' in title or f'{i} pièces' in title:
+            pieces = f"{i} pièces"
+            break
+
+    # Combiner
+    if pieces:
+        return f"{bien_type} {pieces}"
+    else:
+        return bien_type
+
+def normalize_text(value):
+    if value is None:
+        return ""
+    text = str(value).lower()
+    text = unicodedata.normalize('NFD', text)
+    text = ''.join(ch for ch in text if unicodedata.category(ch) != 'Mn')
+    text = re.sub(r"[^a-z0-9]+", " ", text)
+    return re.sub(r"\s+", " ", text).strip()
+
+
+def detect_quartier_from_description(description, titre, url=None):
+    """Détecte le quartier à partir de la description, du titre et de l'URL."""
+    text = normalize_text(f"{titre or ''} {description or ''} {url or ''}")
+    if not text:
+        return None
+
+    quartier_patterns = {
+        "Centre-ville": ["centre ville", "hyper centre", "centre historique", "centrevile"],
+        "Le Mourillon": ["mourillon", "mourilon"],
+        "Place d'Armes": ["place d armes", "place darmes"],
+        "Porte d'Italie": ["porte d italie", "porte italie"],
+        "Pont du Las": ["pont du las", "pont dulas"],
+        "Saint-Jean du Var": ["saint jean du var", "st jean du var", "st jean var"],
+        "Champs-de-Mars": ["champs de mars", "champ de mars"],
+        "Les Lices": ["les lices", "lices"],
+    }
+
+    for quartier, patterns in quartier_patterns.items():
+        for pattern in patterns:
+            if f" {pattern} " in f" {text} ":
+                return quartier
+
+    return None
 
 # ==================== NAVIGATION ====================
 tab1, tab2, tab3, tab4, tab5 = st.tabs(["🔍 Recherche", "📍 Quartiers", "📊 Données", "🛠️ Outils", "ℹ️ À propos"])
@@ -314,7 +325,6 @@ tab1, tab2, tab3, tab4, tab5 = st.tabs(["🔍 Recherche", "📍 Quartiers", "�
 # ==================== TAB 1: RECHERCHE ====================
 with tab1:
     # Section Filtres
-    st.markdown("<div class='filter-section'>", unsafe_allow_html=True)
     st.markdown("<div class='filter-title'>🔍 Critères de recherche</div>", unsafe_allow_html=True)
     
     col1, col2, col3, col4 = st.columns(4)
@@ -323,14 +333,46 @@ with tab1:
         annonces_df = load_annonces()
         
         if annonces_df is not None:
-            # Initialiser session_state pour les détails
+            # Améliorer la détection des quartiers
+            annonces_df['quartier_detecte'] = annonces_df.apply(
+                lambda row: detect_quartier_from_description(
+                    row.get('description'),
+                    row.get('titre'),
+                    row.get('url')
+                ),
+                axis=1
+            )
+            
+            # Initialiser session_state pour les détails et la pagination
             if 'open_details' not in st.session_state:
                 st.session_state.open_details = {}
+            if 'page' not in st.session_state:
+                st.session_state.page = 1
+            if 'scroll_to_top' not in st.session_state:
+                st.session_state.scroll_to_top = False
+            
+            # Nombre d'annonces par page
+            annonces_par_page = 12
             
             # Filtres
             with col1:
-                quartiers = ["Tous les quartiers"] + sorted([str(q) for q in annonces_df['quartier'].dropna().unique().tolist()])
-                selected_quartier = st.selectbox("Quartiers", quartiers)
+                # Liste des quartiers demandés
+                quartiers_defaut = [
+                    "Centre-ville",
+                    "Le Mourillon",
+                    "Place d'Armes",
+                    "Porte d'Italie",
+                    "Pont du Las",
+                    "Saint-Jean du Var",
+                    "Champs-de-Mars",
+                    "Les Lices"
+                ]
+                selected_quartiers = st.multiselect(
+                    "Quartiers",
+                    options=quartiers_defaut,
+                    default=[],
+                    placeholder="Selectionne un ou plusieurs quartiers"
+                )
             
             with col2:
                 types = ["Indifférent"] + sorted([str(t) for t in annonces_df['type_bien'].dropna().unique().tolist()])
@@ -352,13 +394,11 @@ with tab1:
                         (0, 300)
                     )
             
-            st.markdown("</div>", unsafe_allow_html=True)
-            
             # Appliquer les filtres
             filtered_df = annonces_df.copy()
             
-            if selected_quartier != "Tous les quartiers":
-                filtered_df = filtered_df[filtered_df['quartier'] == selected_quartier]
+            if selected_quartiers:
+                filtered_df = filtered_df[filtered_df['quartier_detecte'].isin(selected_quartiers)]
             
             if selected_type != "Indifférent":
                 filtered_df = filtered_df[filtered_df['type_bien'] == selected_type]
@@ -375,34 +415,68 @@ with tab1:
                     (filtered_df['surface_m2'] <= surface_max)
                 ]
             
-            # Résultats
-            st.markdown(f"### {len(filtered_df)} résultats")
+            # Pagination
+            total_annonces = len(filtered_df)
+            total_pages = (total_annonces + annonces_par_page - 1) // annonces_par_page
             
-            if len(filtered_df) > 0:
+            # Sélectionner les annonces de la page actuelle
+            start_idx = (st.session_state.page - 1) * annonces_par_page
+            end_idx = start_idx + annonces_par_page
+            page_df = filtered_df.iloc[start_idx:end_idx]
+
+            # Scroll vers le haut des annonces après changement de page
+            if st.session_state.get('scroll_to_top', False):
+                components.html(
+                    """
+                    <script>
+                    setTimeout(function() {
+                        const appContainer = window.parent.document.querySelector('[data-testid="stAppViewContainer"]');
+                        if (appContainer) {
+                            appContainer.scrollTo({ top: 0, behavior: 'smooth' });
+                        }
+                        window.parent.scrollTo({ top: 0, behavior: 'smooth' });
+                    }, 50);
+                    </script>
+                    """,
+                    height=0,
+                )
+                st.session_state.scroll_to_top = False
+            
+            # Résultats
+            st.markdown(f"### {len(page_df)} annonces affichées (sur {total_annonces} au total)")
+            
+            if len(page_df) > 0:
                 # Calculer le prix moyen au m² pour le scoring
-                if 'prix_eur' in filtered_df.columns and 'surface_m2' in filtered_df.columns:
-                    filtered_df['prix_m2'] = filtered_df['prix_eur'] / filtered_df['surface_m2']
-                    prix_m2_moyen = filtered_df['prix_m2'].mean()
+                if 'prix_eur' in page_df.columns and 'surface_m2' in page_df.columns:
+                    page_df['prix_m2'] = page_df['prix_eur'] / page_df['surface_m2']
+                    prix_m2_moyen = page_df['prix_m2'].mean()
                 else:
                     prix_m2_moyen = 0
                 
                 # Afficher les cartes
                 cols = st.columns(2)
-                for idx, (_, row) in enumerate(filtered_df.iterrows()):
+                for idx, (_, row) in enumerate(page_df.iterrows()):
                     with cols[idx % 2]:
-                        # Carte
-                        st.markdown('<div class="property-card">', unsafe_allow_html=True)
-                        
-                        # Image du bien
-                        st.markdown("<p style='color: #999; font-size: 12px;'>📷 Chargement de l'image...</p>", unsafe_allow_html=True)
-                        image_url = get_image_url(row.get('url'))
-                        if image_url:
-                            try:
-                                st.image(image_url, use_column_width=True, caption="")
-                            except:
-                                st.markdown("<div style='background: #f0f0f0; height: 200px; border-radius: 8px; display: flex; align-items: center; justify-content: center;'><p>🏠 Image indisponible</p></div>", unsafe_allow_html=True)
+                        # Lien vers les photos sur le site
+                        ad_url = row.get('url')
+                        if ad_url and pd.notna(ad_url):
+                            st.markdown(f"""
+                            <div style='background: linear-gradient(135deg, #E8A87C, #C38D9E); height: 200px; border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-bottom: 15px;'>
+                                <a href='{ad_url}' target='_blank' style='text-decoration: none; color: white; text-align: center;'>
+                                    <div style='font-size: 48px; margin-bottom: 10px;'>📸</div>
+                                    <p style='margin: 0; font-size: 16px; font-weight: 500;'>Visualiser les photos sur le site</p>
+                                </a>
+                            </div>
+                            """, unsafe_allow_html=True)
                         else:
-                            st.markdown("<div style='background: #f0f0f0; height: 200px; border-radius: 8px; display: flex; align-items: center; justify-content: center;'><p style='color: #999;'>🖼️ Pas d'image</p></div>", unsafe_allow_html=True)
+                            st.markdown("""
+                            <div style='background: #f0f0f0; height: 200px; border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-bottom: 15px;'>
+                                <div style='text-align: center; color: #999;'>
+                                    <div style='font-size: 48px; margin-bottom: 10px;'>📷</div>
+                                    <p style='margin: 0; font-size: 14px;'>Photos non disponibles</p>
+                                </div>
+                            </div>
+                            """, unsafe_allow_html=True)
                         
                         # Scoring
                         if prix_m2_moyen > 0:
@@ -414,12 +488,19 @@ with tab1:
                             else:
                                 st.markdown(f'<div class="score-badge-overvalued">↘ {score_text}</div>', unsafe_allow_html=True)
                         
-                        # Titre
-                        st.markdown(f"<h4 style='margin: 10px 0;'>{row.get('titre', 'Sans titre')[:60]}</h4>", unsafe_allow_html=True)
+                        # Titre simplifié
+                        titre_simplifie = simplify_title(row.get('titre', 'Sans titre'))
+                        st.markdown(f"<h4 style='margin: 10px 0;'>{titre_simplifie}</h4>", unsafe_allow_html=True)
                         
                         # Localisation
-                        if pd.notna(row.get('quartier')):
-                            st.markdown(f"📍 {row['quartier']}")
+                        quartier_affiche = row.get('quartier_detecte')
+                        if pd.notna(quartier_affiche) and str(quartier_affiche).strip():
+                            st.markdown(f"📍 {quartier_affiche}")
+                        else:
+                            st.markdown(
+                                "<span class='info-tag' style='background:#FFEBEE; color:#C62828;'>Quartier non detecte</span>",
+                                unsafe_allow_html=True,
+                            )
                         
                         # Prix
                         st.markdown(f"<div class='price-main'>{row.get('prix_eur', 0):,.0f}€</div>", unsafe_allow_html=True)
@@ -436,8 +517,6 @@ with tab1:
                         if features:
                             st.markdown(" ".join(features), unsafe_allow_html=True)
                         
-                        st.markdown('</div>', unsafe_allow_html=True)
-                        
                         # Détails avec expander
                         with st.expander("📋 Détails complets du bien"):
                             col_det1, col_det2 = st.columns(2)
@@ -449,7 +528,28 @@ with tab1:
                                 for key in row.index[len(row)//2:]:
                                     if pd.notna(row[key]):
                                         st.write(f"**{key}** : {row[key]}")
-            else:
+            
+            # Contrôles de pagination (en bas des résultats)
+            if total_pages > 1:
+                st.markdown("---")
+                col_pag1, col_pag2, col_pag3 = st.columns([1, 2, 1])
+                with col_pag1:
+                    if st.button("⬅️ Précédent") and st.session_state.page > 1:
+                        st.session_state.page -= 1
+                        st.session_state.scroll_to_top = True
+                        st.rerun()
+                
+                with col_pag2:
+                    st.markdown(f"<center>Page {st.session_state.page} sur {total_pages} ({total_annonces} annonces)</center>", unsafe_allow_html=True)
+                
+                with col_pag3:
+                    if st.button("Suivant ➡️") and st.session_state.page < total_pages:
+                        st.session_state.page += 1
+                        st.session_state.scroll_to_top = True
+                        st.rerun()
+                st.markdown("---")
+
+            if len(page_df) == 0:
                 st.info("❌ Aucun bien ne correspond à vos critères")
         else:
             st.warning("⚠️ Chargement des données...")
