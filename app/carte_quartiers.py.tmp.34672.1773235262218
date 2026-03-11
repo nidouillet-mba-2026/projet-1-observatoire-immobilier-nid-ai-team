@@ -19,15 +19,6 @@ import streamlit.components.v1 as components
 
 from analysis.stats import mean, median, standard_deviation
 
-# ═══════════════════════════════════════════════════════════════════════════
-#  CONFIG PAGE
-# ═══════════════════════════════════════════════════════════════════════════
-
-st.set_page_config(
-    page_title="Carte Quartiers — NidDouillet",
-    page_icon="📍",
-    layout="wide",
-)
 
 # ═══════════════════════════════════════════════════════════════════════════
 #  DONNÉES QUARTIERS
@@ -407,42 +398,44 @@ document.querySelectorAll('.q-poly').forEach(poly => {{
 #  AFFICHAGE STREAMLIT
 # ═══════════════════════════════════════════════════════════════════════════
 
-st.title("📍 Carte des quartiers de Toulon")
-st.caption("Cliquez sur un quartier · Prix/m² calculé depuis les annonces · Stats from scratch")
+def afficher_carte(annonces=None) -> None:
+    """Affiche la carte interactive des quartiers de Toulon."""
+    st.title("📍 Carte des quartiers de Toulon")
+    st.caption("Cliquez sur un quartier · Prix/m² calculé depuis les annonces · Stats from scratch")
 
-# Calcul stats (analysis.stats — aucun numpy)
-q_stats = charger_stats()
+    # Calcul stats (analysis.stats — aucun numpy)
+    q_stats = charger_stats()
 
-# Assemblage JSON pour le JS
-data_carte: dict[str, dict] = {}
-for nom, meta in QUARTIERS_META.items():
-    s = q_stats.get(nom, {})
-    data_carte[nom] = {
-        "desc":       meta["desc"],
-        "tags":       meta["tags"],
-        "tendance":   meta["tendance"],
-        "pm2_median": s.get("pm2_median"),
-        "n_annonces": s.get("n_annonces", 0),
-    }
-data_json = json.dumps(data_carte, ensure_ascii=False)
+    # Assemblage JSON pour le JS
+    data_carte: dict[str, dict] = {}
+    for nom, meta in QUARTIERS_META.items():
+        s = q_stats.get(nom, {})
+        data_carte[nom] = {
+            "desc":       meta["desc"],
+            "tags":       meta["tags"],
+            "tendance":   meta["tendance"],
+            "pm2_median": s.get("pm2_median"),
+            "n_annonces": s.get("n_annonces", 0),
+        }
+    data_json = json.dumps(data_carte, ensure_ascii=False)
 
-# Composant HTML interactif
-components.html(_build_html(data_json), height=750, scrolling=False)
+    # Composant HTML interactif
+    components.html(_build_html(data_json), height=750, scrolling=False)
 
-# ── Tableau récapitulatif sous la carte ────────────────────────────────────
-if q_stats:
-    st.divider()
-    st.subheader("Détail par quartier")
-    rows = []
-    for nom in sorted(q_stats, key=lambda x: q_stats[x].get("pm2_median", 9999)):
-        s = q_stats[nom]
-        rows.append({
-            "Quartier":        nom,
-            "Prix/m² médian":  f"{s['pm2_median']:,.0f} €",
-            "Prix/m² moyen":   f"{s['pm2_mean']:,.0f} €",
-            "Écart-type":      f"{s['pm2_std']:,.0f} €",
-            "Annonces":        s["n_annonces"],
-            "Ambiance":        QUARTIERS_META.get(nom, {}).get("tags", []),
-        })
-    import pandas as _pd
-    st.dataframe(_pd.DataFrame(rows).set_index("Quartier"), use_container_width=True)
+    # ── Tableau récapitulatif sous la carte ────────────────────────────────────
+    if q_stats:
+        st.divider()
+        st.subheader("Détail par quartier")
+        rows = []
+        for nom in sorted(q_stats, key=lambda x: q_stats[x].get("pm2_median", 9999)):
+            s = q_stats[nom]
+            rows.append({
+                "Quartier":        nom,
+                "Prix/m² médian":  f"{s['pm2_median']:,.0f} €",
+                "Prix/m² moyen":   f"{s['pm2_mean']:,.0f} €",
+                "Écart-type":      f"{s['pm2_std']:,.0f} €",
+                "Annonces":        s["n_annonces"],
+                "Ambiance":        QUARTIERS_META.get(nom, {}).get("tags", []),
+            })
+        import pandas as _pd
+        st.dataframe(_pd.DataFrame(rows).set_index("Quartier"), use_container_width=True)

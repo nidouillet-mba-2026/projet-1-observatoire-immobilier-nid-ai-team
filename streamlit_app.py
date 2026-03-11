@@ -8,6 +8,7 @@ import re
 import unicodedata
 
 from analysis.regression import least_squares_fit, r_squared
+from app.carte_quartiers import afficher_carte
 from analysis.scoring import expected_price, opportunity_score, classify_property
 from analysis.knn import find_similar_to_target
 from analysis.stats import mean, median, variance, correlation
@@ -536,8 +537,8 @@ st.markdown("---")
 
 # Navigation
 
-tab1, tab2, tab3, tab4, tab5 = st.tabs(
-    ["🔍 Recherche", "📍 Quartiers", "📊 Données", "🛠️ Outils", "ℹ️ À propos"]
+tab1, tab2, tab3, tab_carte, tab4, tab5 = st.tabs(
+    ["🔍 Recherche", "📍 Quartiers", "📊 Données", "🗺️ Carte", "🛠️ Outils", "ℹ️ À propos"]
 )
 
 
@@ -1019,6 +1020,11 @@ with tab3:
         else:
             st.warning("⚠️ Fichier DVF introuvable.")
 
+
+# Tab Carte
+with tab_carte:
+    annonces_carte = load_annonces()
+    afficher_carte(annonces_carte)
 
 # Tab 4
 
