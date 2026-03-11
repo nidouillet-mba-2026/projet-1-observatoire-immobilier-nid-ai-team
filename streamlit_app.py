@@ -28,6 +28,7 @@ st.markdown(
     <style>
     .stApp {
         background-color: #F9FAF5;
+        color: #000000;
     }
 
     .main {
@@ -144,6 +145,64 @@ st.markdown(
         padding: 30px 20px;
         border-top: 1px solid #E0E0E0;
         margin-top: 40px;
+    }
+
+    .photo-link {
+        text-decoration: none;
+        color: #000000;
+        text-align: center;
+    }
+
+    .stApp p,
+    .stApp span,
+    .stApp label,
+    .stApp div,
+    .stApp li,
+    .stApp h1,
+    .stApp h2,
+    .stApp h3,
+    .stApp h4,
+    .stApp h5,
+    .stApp h6,
+    [data-testid="stMetric"],
+    [data-testid="stMetric"] label,
+    [data-testid="stMetric"] div,
+    [data-testid="stMarkdownContainer"],
+    [data-testid="stMarkdownContainer"] p,
+    [data-testid="stMarkdownContainer"] span,
+    [data-testid="stMarkdownContainer"] li,
+    [data-testid="stMarkdownContainer"] h1,
+    [data-testid="stMarkdownContainer"] h2,
+    [data-testid="stMarkdownContainer"] h3,
+    [data-testid="stMarkdownContainer"] h4 {
+        color: #000000 !important;
+    }
+
+    .stMultiSelect [data-baseweb="select"] > div,
+    .stSelectbox [data-baseweb="select"] > div {
+        background-color: #FFFFFF !important;
+        color: #000000 !important;
+        border-color: #D9D9D9 !important;
+    }
+
+    .stMultiSelect [data-baseweb="tag"],
+    .stMultiSelect [data-baseweb="tag"] span,
+    .stMultiSelect [data-baseweb="select"] input,
+    .stSelectbox [data-baseweb="select"] input,
+    .stSelectbox [data-baseweb="select"] span,
+    .stSelectbox [data-baseweb="select"] svg,
+    .stMultiSelect [data-baseweb="select"] svg,
+    .stSlider [data-baseweb="slider"] *,
+    .stSlider label,
+    .stCheckbox label,
+    .stCheckbox span {
+        color: #000000 !important;
+        fill: #000000 !important;
+    }
+
+    .stCheckbox > label > div[data-testid="stCheckbox"] {
+        background-color: #FFFFFF !important;
+        border-color: #D9D9D9 !important;
     }
     </style>
     """,
@@ -706,7 +765,7 @@ with tab1:
                         st.markdown(
                             f"""
                             <div style='background: linear-gradient(135deg, #E8A87C, #C38D9E); height: 200px; border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-bottom: 15px;'>
-                                <a href='{ad_url}' target='_blank' style='text-decoration: none; color: white; text-align: center;'>
+                                <a href='{ad_url}' target='_blank' class='photo-link'>
                                     <div style='font-size: 48px; margin-bottom: 10px;'>📸</div>
                                     <p style='margin: 0; font-size: 16px; font-weight: 500;'>Visualiser les photos sur le site</p>
                                 </a>
