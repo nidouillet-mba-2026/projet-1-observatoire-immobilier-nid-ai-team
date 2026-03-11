@@ -95,18 +95,18 @@ QUARTIERS_META: dict[str, dict] = {
 # ═══════════════════════════════════════════════════════════════════════════
 
 POLYGONES: dict[str, dict] = {
-    "Les Routes":        {"points": "16,64 120,64 120,182 16,182",                            "lx": 30,  "ly": 126},
-    "Le Faron":          {"points": "120,34 412,34 406,56 394,182 228,182 160,154 120,112",   "lx": 248, "ly": 92 },
-    "Le Pont du Las":    {"points": "16,182 120,182 116,242 16,242",                           "lx": 20,  "ly": 218},
-    "La Serinette":      {"points": "116,182 232,182 232,244 116,242",                         "lx": 142, "ly": 218},
-    "Sainte-Musse":      {"points": "232,154 396,154 394,230 232,230",                         "lx": 282, "ly": 196},
-    "Centre-Ville":      {"points": "116,242 302,242 296,298 116,298",                         "lx": 178, "ly": 274},
-    "Cap Brun":          {"points": "394,154 460,166 458,292 378,306 296,280 296,242 394,230", "lx": 400, "ly": 224},
-    "Saint-Jean du Var": {"points": "16,242 154,242 146,310 16,310",                           "lx": 20,  "ly": 282},
-    "Le Mourillon":      {"points": "296,280 458,280 452,356 310,356",                         "lx": 348, "ly": 322},
-    "La Rode":           {"points": "146,298 272,298 268,356 142,356",                         "lx": 165, "ly": 332},
-    "Claret":            {"points": "272,292 320,286 316,356 268,356",                         "lx": 276, "ly": 328},
-    "Brunet":            {"points": "16,310 146,310 142,356 16,356",                           "lx": 42,  "ly": 338},
+  "Les Routes":        {"points": "24,68 128,68 128,196 24,196",                               "lx": 44,  "ly": 136},
+  "Le Faron":          {"points": "130,42 432,42 426,70 414,196 246,196 172,168 130,126",     "lx": 250, "ly": 102},
+  "Le Pont du Las":    {"points": "24,198 126,198 126,266 24,266",                             "lx": 34,  "ly": 236},
+  "La Serinette":      {"points": "128,198 246,198 246,266 128,266",                           "lx": 160, "ly": 236},
+  "Sainte-Musse":      {"points": "248,168 412,168 412,248 248,248",                           "lx": 302, "ly": 214},
+  "Cap Brun":          {"points": "414,168 476,180 476,336 402,348 316,334 316,262 414,248",   "lx": 420, "ly": 246},
+  "Saint-Jean du Var": {"points": "24,268 126,268 126,340 24,340",                             "lx": 34,  "ly": 304},
+  "Centre-Ville":      {"points": "128,268 316,268 316,334 128,334",                           "lx": 186, "ly": 306},
+  "Brunet":            {"points": "24,342 126,342 120,380 24,380",                             "lx": 46,  "ly": 366},
+  "La Rode":           {"points": "128,336 286,336 280,380 122,380",                           "lx": 176, "ly": 364},
+  "Claret":            {"points": "286,336 334,332 330,380 280,380",                           "lx": 292, "ly": 364},
+  "Le Mourillon":      {"points": "334,332 476,356 476,380 328,380",                           "lx": 374, "ly": 364},
 }
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -233,6 +233,8 @@ LABELS_2_LIGNES: dict[str, tuple[str, str]] = {
     "Le Pont du Las":    ("Le Pont", "du Las"),
     "Saint-Jean du Var": ("St-Jean", "du Var"),
     "Cap Brun":          ("Cap", "Brun"),
+  "Centre-Ville":      ("Centre", "Ville"),
+  "Le Mourillon":      ("Le", "Mourillon"),
 }
 
 
@@ -257,20 +259,20 @@ def _build_html(data_json: str) -> str:
 <html><head><meta charset="utf-8">
 <style>
   *{{box-sizing:border-box;margin:0;padding:0}}
-  body{{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:transparent}}
-  .wrapper{{background:#faf8f5;border-radius:14px;overflow:visible;box-shadow:0 2px 12px rgba(0,0,0,.08)}}
+  body{{font-family:'Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif;background:transparent}}
+  .wrapper{{background:linear-gradient(180deg,#fffdf9 0%,#f7f2ea 100%);border:1px solid #ebe3d8;border-radius:14px;overflow:hidden;box-shadow:0 8px 24px rgba(57,37,17,.08)}}
   .header{{padding:18px 22px 6px;display:flex;align-items:center;gap:8px}}
   .header h2{{font-size:17px;font-weight:700;color:#1e1e1e}}
   .pin{{color:#d4654e;font-size:18px}}
-  .body{{display:flex;padding:10px 16px 16px}}
-  .map-wrap{{flex:1.25}}
-  svg{{width:100%;height:auto;display:block}}
-  .q-poly{{fill:#f5c4b8;stroke:#faf8f5;stroke-width:2.5;cursor:pointer;transition:fill .15s}}
-  .q-poly:hover{{fill:#e8a090}}
-  .q-poly.selected{{fill:#d4654e}}
+  .body{{display:flex;gap:14px;padding:10px 16px 16px;align-items:stretch}}
+  .map-wrap{{flex:1.25;min-width:0;background:radial-gradient(circle at 18% 20%,#fff7ef 0%,#f6ecdf 55%,#f4e8da 100%);border-radius:12px;padding:8px}}
+  svg{{width:100%;height:auto;display:block;max-height:560px}}
+  .q-poly{{fill:#f2b9a7;stroke:#fff8f1;stroke-width:2.6;stroke-linejoin:round;cursor:pointer;transition:fill .18s,transform .18s,filter .18s}}
+  .q-poly:hover{{fill:#e79078;filter:drop-shadow(0 2px 2px rgba(83,43,23,.22))}}
+  .q-poly.selected{{fill:#cd5f48;stroke:#ffe8dc;stroke-width:3.2;filter:drop-shadow(0 3px 3px rgba(71,35,18,.32))}}
   .sea{{fill:#d8eaf4;stroke:none;cursor:default}}
-  .q-label{{font-size:9.5px;fill:#6b3a2a;font-weight:500;pointer-events:none;user-select:none}}
-  .sea-label{{font-size:11px;fill:#7aaabf;font-style:italic;pointer-events:none;user-select:none}}
+  .q-label{{font-size:10.5px;fill:#5a2f22;font-weight:600;pointer-events:none;user-select:none;paint-order:stroke;stroke:#fff9f2;stroke-width:.8}}
+  .sea-label{{font-size:11.5px;fill:#6e9ab0;font-style:italic;pointer-events:none;user-select:none}}
   .panel{{flex:1;min-width:260px;padding:8px 0 0 20px;display:flex;flex-direction:column;justify-content:center}}
   .panel-empty{{text-align:center;padding:30px 10px}}
   .big-pin{{font-size:38px;margin-bottom:10px;opacity:.35}}
@@ -288,11 +290,11 @@ def _build_html(data_json: str) -> str:
   .stat-val{{font-size:19px;font-weight:700;color:#1e1e1e}}
   .stat-val.up{{color:#1fa855}}
   .stat-val.down{{color:#d4654e}}
-  .btns{{display:flex;gap:10px;justify-content:flex-end;padding:12px 18px;border-top:1px solid #ece8e2;background:#faf8f5}}
-  .btn-clear{{padding:8px 18px;border-radius:7px;border:1.5px solid #d0cbc4;background:white;color:#555;font-size:13px;font-weight:500;cursor:pointer}}
-  .btn-clear:hover{{background:#f5f2ee}}
-  .btn-ok{{padding:8px 22px;border-radius:7px;border:none;background:#d4654e;color:white;font-size:13px;font-weight:600;cursor:pointer}}
-  .btn-ok:hover{{background:#c05540}}
+  @media (max-width: 980px) {{
+    .body{{flex-direction:column}}
+    .panel{{min-width:0;padding:10px 2px 0 2px}}
+    svg{{max-height:460px}}
+  }}
 </style>
 </head><body>
 <div class="wrapper">
@@ -302,9 +304,9 @@ def _build_html(data_json: str) -> str:
   </div>
   <div class="body">
     <div class="map-wrap">
-      <svg viewBox="0 0 480 410">
-        <polygon class="sea" points="16,358 462,358 462,410 16,410"/>
-        <text class="sea-label" x="190" y="388">Rade de Toulon</text>
+      <svg viewBox="0 0 500 390" preserveAspectRatio="xMidYMid meet">
+        <path class="sea" d="M18,332 C120,336 240,324 352,330 C418,334 458,350 484,346 L484,390 L18,390 Z"/>
+        <text class="sea-label" x="194" y="368">Rade de Toulon</text>
         {polygons_svg}
       </svg>
     </div>
@@ -331,10 +333,6 @@ def _build_html(data_json: str) -> str:
       </div>
     </div>
   </div>
-  <div class="btns">
-    <button class="btn-clear" onclick="clearAll()">Tout effacer</button>
-    <button class="btn-ok"    onclick="selectAll()">Valider (tous)</button>
-  </div>
 </div>
 <script>
 const DATA = {data_json};
@@ -359,16 +357,6 @@ function showQuartier(name) {{
   document.querySelectorAll('.q-poly').forEach(p => p.classList.remove('selected'));
   const poly = document.querySelector('.q-poly[data-name="' + name + '"]');
   if (poly) poly.classList.add('selected');
-}}
-
-function clearAll() {{
-  document.querySelectorAll('.q-poly').forEach(p => p.classList.remove('selected'));
-  document.getElementById('panel-empty').style.display = 'block';
-  document.getElementById('panel-detail').classList.remove('active');
-}}
-
-function selectAll() {{
-  document.querySelectorAll('.q-poly').forEach(p => p.classList.add('selected'));
 }}
 
 const emptyP = document.querySelector('#panel-empty p');
@@ -420,7 +408,7 @@ def afficher_carte(annonces=None) -> None:
     data_json = json.dumps(data_carte, ensure_ascii=False)
 
     # Composant HTML interactif
-    components.html(_build_html(data_json), height=750, scrolling=False)
+    components.html(_build_html(data_json), height=880, scrolling=False)
 
     # ── Tableau récapitulatif sous la carte ────────────────────────────────────
     if q_stats:
