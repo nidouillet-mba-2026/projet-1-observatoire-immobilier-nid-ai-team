@@ -112,10 +112,10 @@ POLYGONES: dict[str, dict] = {
     "Centre-Ville":      {"points": "116,242 302,242 296,298 116,298",                         "lx": 178, "ly": 274},
     "Cap Brun":          {"points": "394,154 460,166 458,292 378,306 296,280 296,242 394,230", "lx": 400, "ly": 224},
     "Saint-Jean du Var": {"points": "16,242 154,242 146,310 16,310",                           "lx": 20,  "ly": 282},
-    "Le Mourillon":      {"points": "296,280 458,280 452,354 310,354",                         "lx": 348, "ly": 320},
-    "La Rode":           {"points": "146,298 270,298 264,357 142,357",                         "lx": 174, "ly": 332},
-    "Claret":            {"points": "270,292 310,286 308,357 264,357",                         "lx": 272, "ly": 332},
-    "Brunet":            {"points": "16,310 154,310 148,362 16,362",                           "lx": 52,  "ly": 342},
+    "Le Mourillon":      {"points": "296,280 458,280 452,356 310,356",                         "lx": 348, "ly": 322},
+    "La Rode":           {"points": "146,298 272,298 268,356 142,356",                         "lx": 165, "ly": 332},
+    "Claret":            {"points": "272,292 320,286 316,356 268,356",                         "lx": 276, "ly": 328},
+    "Brunet":            {"points": "16,310 146,310 142,356 16,356",                           "lx": 42,  "ly": 338},
 }
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -143,10 +143,10 @@ NORMALISATION: dict[str, str] = {
     "cap brun": "Cap Brun",
     "cap-brun": "Cap Brun",
     "le cap brun - le petit bois": "Cap Brun",
-    # Saint-Jean du Var
+    # Saint-Jean du Var (toutes variantes, tirets inclus)
     "saint jean du var": "Saint-Jean du Var",
     "saint-jean-du-var": "Saint-Jean du Var",
-    "saint jean du var": "Saint-Jean du Var",
+    "saint-jean du var": "Saint-Jean du Var",
     # La Serinette
     "la serinette": "La Serinette",
     "la serinette - la barre": "La Serinette",
@@ -237,14 +237,29 @@ def charger_stats() -> dict[str, dict]:
 #  CONSTRUCTION HTML
 # ═══════════════════════════════════════════════════════════════════════════
 
+# Labels longs → coupés sur 2 lignes pour les polygones étroits
+LABELS_2_LIGNES: dict[str, tuple[str, str]] = {
+    "Le Pont du Las":    ("Le Pont", "du Las"),
+    "Saint-Jean du Var": ("St-Jean", "du Var"),
+    "Cap Brun":          ("Cap", "Brun"),
+}
+
+
 def _build_html(data_json: str) -> str:
-    # Génère les balises SVG pour chaque quartier
     svg_lines = []
     for nom, p in POLYGONES.items():
-        svg_lines.append(
-            f'<polygon class="q-poly" data-name="{nom}" points="{p["points"]}"/>'
-            f'<text class="q-label" x="{p["lx"]}" y="{p["ly"]}">{nom}</text>'
-        )
+        poly = f'<polygon class="q-poly" data-name="{nom}" points="{p["points"]}"/>'
+        if nom in LABELS_2_LIGNES:
+            l1, l2 = LABELS_2_LIGNES[nom]
+            label = (
+                f'<text class="q-label" x="{p["lx"]}" y="{p["ly"] - 5}">'
+                f'<tspan x="{p["lx"]}" dy="0">{l1}</tspan>'
+                f'<tspan x="{p["lx"]}" dy="11">{l2}</tspan>'
+                f'</text>'
+            )
+        else:
+            label = f'<text class="q-label" x="{p["lx"]}" y="{p["ly"]}">{nom}</text>'
+        svg_lines.append(poly + label)
     polygons_svg = "\n        ".join(svg_lines)
 
     return f"""<!DOCTYPE html>
@@ -252,7 +267,7 @@ def _build_html(data_json: str) -> str:
 <style>
   *{{box-sizing:border-box;margin:0;padding:0}}
   body{{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:transparent}}
-  .wrapper{{background:#faf8f5;border-radius:14px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.08)}}
+  .wrapper{{background:#faf8f5;border-radius:14px;overflow:visible;box-shadow:0 2px 12px rgba(0,0,0,.08)}}
   .header{{padding:18px 22px 6px;display:flex;align-items:center;gap:8px}}
   .header h2{{font-size:17px;font-weight:700;color:#1e1e1e}}
   .pin{{color:#d4654e;font-size:18px}}
@@ -296,9 +311,9 @@ def _build_html(data_json: str) -> str:
   </div>
   <div class="body">
     <div class="map-wrap">
-      <svg viewBox="0 0 480 395">
-        <polygon class="sea" points="16,360 462,360 462,392 16,392"/>
-        <text class="sea-label" x="190" y="380">Rade de Toulon</text>
+      <svg viewBox="0 0 480 410">
+        <polygon class="sea" points="16,358 462,358 462,410 16,410"/>
+        <text class="sea-label" x="190" y="388">Rade de Toulon</text>
         {polygons_svg}
       </svg>
     </div>
@@ -412,7 +427,7 @@ for nom, meta in QUARTIERS_META.items():
 data_json = json.dumps(data_carte, ensure_ascii=False)
 
 # Composant HTML interactif
-components.html(_build_html(data_json), height=580, scrolling=False)
+components.html(_build_html(data_json), height=750, scrolling=False)
 
 # ── Tableau récapitulatif sous la carte ────────────────────────────────────
 if q_stats:
